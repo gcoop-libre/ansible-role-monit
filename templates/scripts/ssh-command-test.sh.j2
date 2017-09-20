@@ -1,0 +1,4 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+/usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {{ monit_ssh_port }} -l {{ monit_ssh_username }} -i {{ monit_ssh_identity }} {{ monit_ssh_host }} {{ monit_ssh_command }}

@@ -1,0 +1,8 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+{% if monit_varnish_version | version_compare('4.1', '>=') %}
+/usr/bin/varnishadm backend.list {{ monit_varnish_backend }} | /bin/grep {{ monit_varnish_backend }} | /usr/bin/awk {'print $3'} | /bin/grep Healthy
+{% else %}
+/usr/bin/varnishadm backend.list {{ monit_varnish_backend }} | /bin/grep {{ monit_varnish_backend }} | /usr/bin/awk {'print $4'} | /bin/grep Healthy
+{% endif %}

@@ -1,0 +1,74 @@
+# {{ ansible_managed }}
+
+SET DAEMON {{ monit_interval }}
+{% if monit_start_delay > 0 %}
+  WITH START DELAY {{ monit_start_delay }}
+{% endif %}
+
+SET LOGFILE {{ monit_log }}
+
+{% if monit_pid | length > 0 %}
+SET PIDFILE {{ monit_pid }}
+{% endif %}
+
+SET IDFILE {{ monit_lib_id }}
+
+SET STATEFILE {{ monit_lib_state }}
+
+{% if (monit_limits_fields | length > 0) and (monit_limits | length > 0) %}
+SET LIMITS {
+{% for key in monit_limits_fields %}
+{% if monit_limits[key] is defined and monit_limits[key].value is defined and monit_limits[key].unit is defined %}
+  {{ (key | replace('_', '')) }}: {{ monit_limits[key].value }} {{ monit_limits[key].unit }}
+{% endif %}
+{% endfor %}
+}
+{% endif %}
+
+{% if monit_ssl_fields | length > 0 %}
+SET SSL OPTIONS {
+{% if 'version' in monit_ssl_fields %}
+  VERSION: {{ monit_ssl.version | default('tlsv12') }}
+{% endif %}
+{% if 'verify' in monit_ssl_fields %}
+  VERIFY: {{ (monit_ssl.verify | default(True)) | ternary('ENABLE', 'DISABLE') }}
+{% endif %}
+{% if 'selfsigned' in monit_ssl_fields %}
+  SELFSIGNED: {{ (monit_ssl.selfsigned | default(False)) | ternary('ALLOW', 'REJECT') }}
+{% endif %}
+{% if ('ciphers' in monit_ssl_fields) and (monit_ssl.ciphers is defined) %}
+  CIPHERS: "{{ monit_ssl.ciphers }}"
+{% endif %}
+{% if ('httpd_pem' in monit_ssl_fields) and (monit_ssl.httpd_pem is defined) %}
+  PEMFILE: "{{ monit_ssl.httpd_pem }}"
+{% endif %}
+{% if ('client_pem' in monit_ssl_fields) and (monit_ssl.client_pem is defined) %}
+  CLIENTPEMFILE: "{{ monit_ssl.client_pem }}"
+{% endif %}
+{% if ('ca_pem' in monit_ssl_fields) and (monit_ssl.ca_pem is defined) %}
+  CACERTIFICATEFILE: "{{ monit_ssl.ca_pem }}"
+{% endif %}
+{% if ('ca_dir' in monit_ssl_fields) and (monit_ssl.ca_dir is defined) %}
+  CACERTIFICATEPATH: "{{ monit_ssl.ca_dir }}"
+{% endif %}
+}
+{% endif %}
+
+{% if monit_queue_events is defined %}
+SET EVENTQUEUE
+  WITH BASEDIR {{ monit_lib_queue_dir }}
+  AND SLOTS {{ monit_queue_slots }}
+{% endif %}
+
+{% if monit_mmonit %}
+SET MMONIT {%if monit_mmonit_ssl %}https://{% else %}http://{% endif %}{{ monit_mmonit_user + ':' + monit_mmonit_password + '@' + monit_mmonit_host + ':' + monit_mmonit_port + monit_mmonit_uri }}
+{% if monit_mmonit_timeout > 0 %}
+  WITH TIMEOUT {{ monit_mmonit_timeout }} SECONDS
+{% endif %}
+{% if not monit_mmonit_credentials %}
+  AND REGISTER WITHOUT CREDENTIALS
+{% endif %}
+{% endif %}
+
+include {{ monit_conf_common_dir }}/*
+include {{ monit_conf_enabled_dir }}/*

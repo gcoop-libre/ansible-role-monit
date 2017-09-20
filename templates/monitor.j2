@@ -1,0 +1,1149 @@
+# {{ ansible_managed }}
+{% set monit_monitor_type = '' %}
+{% if monit_monitor.monitor_process | default(False) %}
+{% set monit_monitor_type = 'PROCESS' %}
+{% elif monit_monitor.monitor_file | default(False) %}
+{% set monit_monitor_type = 'FILE' %}
+{% elif monit_monitor.monitor_fifo | default(False) %}
+{% set monit_monitor_type = 'FIFO' %}
+{% elif monit_monitor.monitor_filesystem | default(False) %}
+{% set monit_monitor_type = 'FILESYSTEM' %}
+{% elif monit_monitor.monitor_directory | default(False) %}
+{% set monit_monitor_type = 'DIRECTORY' %}
+{% elif monit_monitor.monitor_host | default(False) %}
+{% set monit_monitor_type = 'HOST' %}
+{% elif monit_monitor.monitor_system | default(False) %}
+{% set monit_monitor_type = 'SYSTEM' %}
+{% elif monit_monitor.monitor_program | default(False) %}
+{% set monit_monitor_type = 'PROGRAM' %}
+{% elif monit_monitor.monitor_network | default(False) %}
+{% set monit_monitor_type = 'NETWORK' %}
+{% endif %}
+{% if monit_monitor_type | length > 0 %}
+{% set monit_monitor_custom_monitors = [] %}
+{% set monit_monitor_test_number = [0] %}
+{% if monit_monitor.tests is defined %}
+{% for test in monit_monitor.tests %}
+{% set monit_monitor_test = '' %}
+{% if test.test_existence is defined %}
+{% if monit_monitor_type in ['PROCESS', 'FILE', 'DIRECTORY', 'FILESYSTEM', 'FIFO'] %}
+{% if test.test_existence.exist | default(True) %}
+{% set monit_monitor_test = 'DOES EXIST' %}
+{% else %}
+{% set monit_monitor_test = 'DOES NOT EXIST' %}
+{% endif %}
+{% endif %}
+{% elif test.test_load is defined %}
+{% if monit_monitor_type == 'SYSTEM' and test.test_load.value is defined %}
+{% if test.test_load.interval_5min | default(False) %}
+{% set monit_monitor_test = 'LOADAVG (5min)' %}
+{% elif test.test_load.interval_15min | default(False) %}
+{% set monit_monitor_test = 'LOADAVG (15min)' %}
+{% else %}
+{% set monit_monitor_test = 'LOADAVG (1min)' %}
+{% endif %}
+{% if test.test_load.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_load.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_load.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_load.value | string) %}
+{% endif %}
+{% elif test.test_cpu is defined %}
+{% if monit_monitor_type in ['SYSTEM', 'PROCESS'] and test.test_cpu.value is defined %}
+{% if monit_monitor_type == 'SYSTEM' %}
+{% set monit_monitor_test = 'CPU USAGE' %}
+{% if test.test_cpu.user | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' (USER)' %}
+{% elif test.test_cpu.system | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' (SYSTEM)' %}
+{% elif test.test_cpu.wait | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' (WAIT)' %}
+{% endif %}
+{% elif monit_monitor_type == 'PROCESS' %}
+{% if test.test_cpu.total | default(False) %}
+{% set monit_monitor_test = 'TOTAL CPU' %}
+{% else %}
+{% set monit_monitor_test = 'CPU' %}
+{% endif %}
+{% endif %}
+{% if test.test_cpu.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_cpu.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_cpu.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_cpu.value | string) + '%' %}
+{% endif %}
+{% elif test.test_threads is defined %}
+{% if monit_monitor_type == 'PROCESS' and test.test_threads.value is defined %}
+{% set monit_monitor_test = 'THREADS' %}
+{% if test.test_threads.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_threads.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_threads.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_threads.value | string) %}
+{% endif %}
+{% elif test.test_children is defined %}
+{% if monit_monitor_type == 'PROCESS' and test.test_children.value is defined %}
+{% set monit_monitor_test = 'CHILDREN' %}
+{% if test.test_children.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_children.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_children.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_children.value | string) %}
+{% endif %}
+{% elif test.test_memory is defined %}
+{% if monit_monitor_type in ['SYSTEM', 'PROCESS'] and test.test_memory.value is defined %}
+{% if monit_monitor_type == 'PROCESS' and test.test_memory.total | default(False) %}
+{% if monit_test_total_memory_available %}
+{% set monit_monitor_test = 'TOTAL MEMORY USAGE' %}
+{% else %}
+{% set monit_monitor_test = 'TOTALMEMORY USAGE' %}
+{% endif %}
+{% else %}
+{% set monit_monitor_test = 'MEMORY USAGE' %}
+{% endif %}
+{% if test.test_memory.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_memory.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_memory.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_memory.value | string) %}
+{% if (test.test_memory.unit | default('B')) == '%' %}
+{% set monit_monitor_test = monit_monitor_test + '%' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' ' + (test.test_memory.unit | default('B')) %}
+{% endif %}
+{% endif %}
+{% elif test.test_swap is defined %}
+{% if monit_monitor_type == 'SYSTEM' and test.test_swap.value is defined %}
+{% set monit_monitor_test = 'SWAP USAGE' %}
+{% if test.test_swap.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_swap.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_swap.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_swap.value | string) %}
+{% if (test.test_swap.unit | default('B')) == '%' %}
+{% set monit_monitor_test = monit_monitor_test + '%' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' ' + (test.test_swap.unit | default('B')) %}
+{% endif %}
+{% endif %}
+{% elif test.test_io is defined %}
+{% if monit_monitor_type in ['PROCESS', 'FILESYSTEM'] and test.test_io.value is defined %}
+{% if monit_monitor_type == 'PROCESS' %}
+{% set monit_monitor_test = 'DISK' %}
+{% else %}
+{% set monit_monitor_test = '' %}
+{% endif %}
+{% if test.test_io.read | default(True) %}
+{% set monit_monitor_test = monit_monitor_type + ' READ RATE' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_type + ' WRITE RATE' %}
+{% endif %}
+{% if test.test_io.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_io.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_io.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_io.value | string) %}
+{% if test.test_io.operations | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' OPERATIONS/S' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' ' + (test.test_io.unit | default('B')) + '/S' %}
+{% endif %}
+{% endif %}
+{% elif test.test_checksum is defined %}
+{% if monit_monitor_type == 'FILE' %}
+{% if test.test_checksum.failed | default(False) %}
+{% set monit_monitor_test = 'FAILED' %}
+{% else %}
+{% set monit_monitor_test = 'CHANGED' %}
+{% endif %}
+{% if test.test_checksum.md5 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' MD5 CHECKSUM' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' SHA1 CHECKSUM' %}
+{% endif %}
+{% if test.test_checksum.failed | default(False) and test.test_checksum.expected is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' EXPECT ' + test.test_checksum.expected %}
+{% endif %}
+{% endif %}
+{% elif test.test_timestamp is defined %}
+{% if monit_monitor_type in ['FILE', 'FIFO', 'DIRECTORY'] %}
+{% set monit_monitor_test = '' %}
+{% if test.test_timestamp.changed | default(True) %}
+{% set monit_monitor_test = 'CHANGED' %}
+{% endif %}
+{% if test.test_timestamp.access | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' ACCESS TIME ' %}
+{% elif test.test_timestamp.modification | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' MODIFICATION TIME ' %}
+{% elif test.test_timestamp.change | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' CHANGE TIME ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' TIMESTAMP ' %}
+{% endif %}
+{% if not test.test_timestamp.changed | default(True) and test.test_timestamp.value is defined %}
+{% if test.test_timestamp.newer | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' IS NEWER THAN ' %}
+{% elif test.test_timestamp.greater | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% elif test.test_timestamp.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_timestamp.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_timestamp.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' IS OLDER THAN ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_timestamp.value | string) + ' ' + test.test_timestamp.unit | default('seconds') %}
+{% endif %}
+{% endif %}
+{% elif test.test_size is defined %}
+{% if monit_monitor_type =='FILE' %}
+{% if test.test_size.changed | default(True) %}
+{% set monit_monitor_test = 'CHANGED SIZE' %}
+{% elif test.test_size.value is defined %}
+{% set monit_monitor_test = 'SIZE' %}
+{% if test.test_size.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_size.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_size.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_size.value | string) + ' ' + (test.test_size.unit | default('B')) %}
+{% endif %}
+{% endif %}
+{% elif test.test_content is defined %}
+{% if monit_monitor_type == 'FILE' and (test.test_content.regex is defined or test.test_content.path is defined) %}
+{% set monit_monitor_test = 'CONTENT' %}
+{% if test.test_content.match | default(True) %}
+{% set monit_monitor_test = monit_monitor_test + ' = ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% endif %}
+{% if test.test_content.regex is defined %}
+{% set monit_monitor_test = monit_monitor_test + test.test_content.regex %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + test.test_content.path %}
+{% endif %}
+{% endif %}
+{% elif test.test_mount_flags | default(False) %}
+{% if monit_monitor_type == 'FILESYSTEM' %}
+{% set monit_monitor_test = 'CHANGED FSFLAGS' %}
+{% endif %}
+{% elif test.test_usage is defined %}
+{% if monit_monitor_type == 'FILESYSTEM' and test.test_usage.value is defined %}
+{% if test.test_usage.inodes | default(False) %}
+{% set monit_monitor_test = 'INODES' %}
+{% else %}
+{% set monit_monitor_test = 'SPACE' %}
+{% endif %}
+{% if test.test_usage.free | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' FREE' %}
+{% endif %}
+{% if test.test_usage.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_usage.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_usage.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_usage.value | string) %}
+{% if test.test_usage.inodes | default(False) %}
+{% if test.test_usage.percent | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + '%' %}
+{% endif %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' ' + (test.test_usage.unit | default('%')) %}
+{% endif %}
+{% endif %}
+{% elif test.test_service_time is defined %}
+{% if monit_monitor_type == 'FILESYSTEM' and test.test_service_time.value is defined %}
+{% set monit_monitor_test = 'SERVICE TIME' %}
+{% if test.test_service_time.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_service_time.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_service_time.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_service_time.value | string) + ' MILLISECONDS' %}
+{% endif %}
+{% elif test.test_permissions is defined %}
+{% if monit_monitor_type in ['FILE', 'FIFO', 'DIRECTORY', 'FILESYSTEM'] %}
+{% if test.test_permissions.changed | default(True) %}
+{% set monit_monitor_test = 'CHANGED PERMISSION' %}
+{% elif test.test_permissions.mode is defined %}
+{% set monit_monitor_test = 'FAILED PERMISSION ' + test.test_permissions.mode %}
+{% endif %}
+{% endif %}
+{% elif test.test_uid is defined %}
+{% if monit_monitor_type in ['FILE', 'FIFO', 'DIRECTORY', 'PROCESS'] %}
+{% set monit_monitor_test = 'FAILED UID "' + test.test_uid + '"' %}
+{% endif %}
+{% elif test.test_gid is defined %}
+{% if monit_monitor_type in ['FILE', 'FIFO', 'DIRECTORY', 'PROCESS'] %}
+{% set monit_monitor_test = 'FAILED GID "' + test.test_gid + '"' %}
+{% endif %}
+{% elif test.test_pid is defined %}
+{% if monit_monitor_type == 'PROCESS' %}
+{% set monit_monitor_test = 'CHANGED PID' %}
+{% endif %}
+{% elif test.test_ppid is defined %}
+{% if monit_monitor_type == 'PROCESS' %}
+{% set monit_monitor_test = 'CHANGED PPID' %}
+{% endif %}
+{% elif test.test_uptime is defined %}
+{% if monit_monitor_type in ['PROCESS', 'SYSTEM'] and test.test_uptime.value is defined and test.test_uptime.unit is defined %}
+{% set monit_monitor_test = 'UPTIME' %}
+{% if test.test_uptime.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_uptime.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_uptime.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_uptime.value | string) + ' ' + test.test_uptime.unit %}
+{% endif %}
+{% elif test.test_status is defined %}
+{% if monit_monitor_type == 'PROGRAM' and test.test_status.value is defined %}
+{% if test.test_status.changed | default(True) %}
+{% set monit_monitor_test = 'CHANGED STATUS' %}
+{% elif test.test_status.value is defined %}
+{% set monit_monitor_test = 'STATUS' %}
+{% if test.test_status.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_status.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_status.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_status.value | string) %}
+{% endif %}
+{% endif %}
+{% elif test.test_link is defined %}
+{% if monit_monitor_type == 'NETWORK' %}
+{% if test.test_link.capacity | default(False) %}
+{% set monit_monitor_test = 'CHANGED LINK CAPACITY' %}
+{% else %}
+{% set monit_monitor_test = 'FAILED LINK' %}
+{% endif %}
+{% endif %}
+{% elif test.test_saturation is defined %}
+{% if monit_monitor_type == 'NETWORK' and test.test_saturation.value is defined %}
+{% set monit_monitor_test = 'SATURATION' %}
+{% if test.test_saturation.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_saturation.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_saturation.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_saturation.value | string) + '%' %}
+{% endif %}
+{% elif test.test_bandwidth is defined %}
+{% if monit_monitor_type == 'NETWORK' and test.test_bandwidth.value is defined %}
+{% if test.test_bandwidth.interval is defined %}
+{% if test.test_bandwidth.download | default(False) %}
+{% set monit_monitor_test = 'TOTAL DOWNLOADED' %}
+{% else %}
+{% set monit_monitor_test = 'TOTAL UPLOADED' %}
+{% endif %}
+{% else %}
+{% if test.test_bandwidth.download | default(False) %}
+{% set monit_monitor_test = 'DOWNLOAD' %}
+{% else %}
+{% set monit_monitor_test = 'UPLOAD' %}
+{% endif %}
+{% endif %}
+{% if test.test_bandwidth.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif test.test_bandwidth.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' == ' %}
+{% elif test.test_bandwidth.notequal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (test.test_bandwidth.value | string) %}
+{% if test.test_bandwidth.packets | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' PACKETS' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' ' + test.test_bandwidth.unit | default('GB') %}
+{% endif %}
+{% if test.test_bandwidth.interval is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' IN LAST ' + (test.test_bandwidth.interval.value | string) + ' ' + test.test_bandwidth.interval.unit %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + '/S' %}
+{% endif %}
+{% endif %}
+{% elif test.test_ping is defined %}
+{% if monit_monitor_type == 'HOST' %}
+{% set monit_monitor_test = 'FAILED PING' %}
+{% if test.test_ping.ipv4 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + '4' %}
+{% elif test.test_ping.ipv6 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + '6' %}
+{% endif %}
+{% if (test.test_ping.count | default(0)) > 0 %}
+{% set monit_monitor_test = monit_monitor_test + ' COUNT ' + (test.test_ping.count | string) %}
+{% endif %}
+{% if (test.test_ping.size | default(0)) > 0 %}
+{% set monit_monitor_test = monit_monitor_test + ' OF SIZE ' + (test.test_ping.size | string) %}
+{% endif %}
+{% if (test.test_ping.timeout | default(0)) > 0 %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH TIMEOUT ' + (test.test_ping.timeout | string) + ' SECONDS' %}
+{% endif %}
+{% if test.test_ping.address is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' USING ADDRESS ' + test.test_ping.address %}
+{% endif %}
+{% endif %}
+{% elif test.test_connection is defined %}
+{% if monit_monitor_type in ['PROCESS', 'HOST'] %}
+{% set monit_monitor_test = 'FAILED' %}
+{% if test.test_connection.socket is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' ON UNIXSOCKET "' + test.test_connection.socket + '"' %}
+{% else %}
+{% if test.test_connection.host is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' ON HOST ' + test.test_connection.host %}
+{% endif %}
+{% if test.test_connection.port is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' USE PORT ' + (test.test_connection.port | string) %}
+{% endif %}
+{% if test.test_connection.address is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' USING ADDRESS ' + test.test_connection.address %}
+{% endif %}
+{% if test.test_connection.ipv4 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' IPV4' %}
+{% elif test.test_connection.ipv6 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' IPV6' %}
+{% endif %}
+{% if test.test_connection.ssl | default(False) %}
+{% if monit_test_ssl_options_available %}
+{% set monit_monitor_test = monit_monitor_test + ' USING SSL' %}
+{% if test.test_connection.ssl_options is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH OPTIONS {' %}
+{% if ('version' in monit_ssl_fields) and (test.test_connection.ssl_options.version is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' VERSION: ' + test.test_connection.ssl_options.version %}
+{% endif %}
+{% if ('verify' in monit_ssl_fields) and (test.test_connection.ssl_options.verify is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' VERIFY: ' + (test.test_connection.ssl_options.verify | ternary('ENABLE', 'DISABLE')) %}
+{% endif %}
+{% if ('selfsigned' in monit_ssl_fields) and (test.test_connection.ssl_options.selfsigned is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' SELFSIGNED: ' + (test.test_connection.ssl_options.selfsigned | ternary('ALLOW', 'REJECT')) %}
+{% endif %}
+{% if ('ciphers' in monit_ssl_fields) and (test.test_connection.ssl_options.ciphers is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' CIPHERS: ' + test.test_connection.ssl_options.ciphers %}
+{% endif %}
+{% if ('client_pem' in monit_ssl_fields) and (test.test_connection.ssl_options.client_pem is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' CLIENTPEMFILE: ' + test.test_connection.ssl_options.client_pem %}
+{% endif %}
+{% if ('ca_pem' in monit_ssl_fields) and (test.test_connection.ssl_options.ca_pem is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' CACERTIFICATEFILE: ' + test.test_connection.ssl_options.ca_pem %}
+{% endif %}
+{% if ('ca_dir' in monit_ssl_fields) and (test.test_connection.ssl_options.ca_dir is defined) %}
+{% set monit_monitor_test = monit_monitor_test + ' CACERTIFICATEPATH: ' + test.test_connection.ssl_options.ca_dir %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + ' }' %}
+{% endif %}
+{% else %}
+{% if (test.test_connection.ssl_options.version is defined) and ((test.test_connection.ssl_options.version | lower) != 'auto') %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL ' + monit_mail_ssl_options.version %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL SSLAUTO' %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if test.test_connection.certificate_checksum is defined and test.test_connection.certificate_checksum.expected is defined %}
+{% set monit_monitor_test = monit_monitor_test + 'WITH CERTIFICATE CHECKSUM' %}
+{% if test.test_connection.certificate_checksum.md5 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' SHA1 ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + '"' + test.test_connection.certificate_checksum.expected + '"' %}
+{% endif %}
+{% if test.test_connection.certificate_valid is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CERTIFICATE VALID FOR ' + (test.test_connection.certificate_valid | string) + ' DAYS' %}
+{% endif %}
+{% endif %}
+{% if test.test_connection.tcp | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE TCP' %}
+{% elif test.test_connection.udp | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE UDP' %}
+{% endif %}
+{% if test.test_connection.protocol is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' USING PROTOCOL ' + test.test_connection.protocol %}
+{% if (test.test_connection.protocol | lower) == 'http' %}
+{% if test.test_connection.username is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH USERNAME "' + test.test_connection.username + '"' %}
+{% endif %}
+{% if test.test_connection.password is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
+{% endif %}
+{% if test.test_connection.get | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' USING METHOD GET' %}
+{% elif test.test_connection.head | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' USING METHOD HEAD' %}
+{% endif %}
+{% if test.test_connection.headers is defined %}
+{% for header, value in test.test_connection.headers.iteritems() %}
+{% if loop.first %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH HTTP HEADERS [ ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + header + ': ' + value %}
+{% if loop.last %}
+{% set monit_monitor_test = monit_monitor_test + ' ]' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ', ' %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if test.test_connection.uri is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND REQUEST "' + test.test_connection.uri + '"' %}
+{% endif %}
+{% if test.test_connection.content is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CONTENT "' + test.test_connection.content + '"' %}
+{% endif %}
+{% if test.test_connection.response_code is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND HAS STATUS = ' + (test.test_connection.response_code | string) %}
+{% endif %}
+{% if test.test_connection.checksum is defined and test.test_connection.checksum.expected is defined %}
+{% set monit_monitor_test = monit_monitor_test + 'WITH CHECKSUM' %}
+{% if test.test_connection.checksum.md5 | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' SHA1 ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + '"' + test.test_connection.checksum.expected + '"' %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'apache-status' %}
+{% if test.test_connection.uri is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' ON PATH "' + test.test_connection.uri + '"' %}
+{% endif %}
+{% if test.test_connection.username is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH USERNAME "' + test.test_connection.username + '"' %}
+{% endif %}
+{% if test.test_connection.password is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
+{% endif %}
+{% if test.test_connection.properties is defined %}
+{% for property in test.test_connection.properties %}
+{% if loop.first %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + property.name %}
+{% if property.less | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' < ' %}
+{% elif property.equal | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' = ' %}
+{% else %}
+{% set monit_monitor_test = monit_monitor_test + ' > ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + (property.value | string) + '%' %}
+{% if not loop.last %}
+{% set monit_monitor_test = monit_monitor_test + ' OR ' %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'mysql' %}
+{% if test.test_connection.username is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH USERNAME "' + test.test_connection.username + '"' %}
+{% endif %}
+{% if test.test_connection.password is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'radius' %}
+{% if test.test_connection.password is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH SECRET "' + test.test_connection.password + '"' %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'sip' %}
+{% if test.test_connection.target is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH TARGET "' + test.test_connection.target + '"' %}
+{% endif %}
+{% if test.test_connection.max_forward is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND MAXFORWARD "' + test.test_connection.max_forward + '"' %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'smtp' or (test.test_connection.protocol | lower) == 'smtps' %}
+{% if test.test_connection.username is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH USERNAME "' + test.test_connection.username + '"' %}
+{% endif %}
+{% if test.test_connection.password is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
+{% endif %}
+{% elif (test.test_connection.protocol | lower) == 'websocket' %}
+{% if test.test_connection.host is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH HOST "' + test.test_connection.host + '"' %}
+{% endif %}
+{% if test.test_connection.uri is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' AND REQUEST "' + test.test_connection.uri + '"' %}
+{% endif %}
+{% if test.test_connection.origin is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' USING ORIGIN "' + test.test_connection.origin + '"' %}
+{% endif %}
+{% if test.test_connection.version is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' FOR VERSION "' + (test.test_connection.version | string) + '"' %}
+{% endif %}
+{% endif %}
+{% elif test.test_connection.send_expect is defined %}
+{% for send_expect in test.test_connection.send_expect %}
+{% if ((send_expect.send | default(False)) or (send_expect.expect | default(False))) and send_expect.value is defined %}
+{% if send_expect.send | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' HAS SEND ' %}
+{% elif send_expect.expect | default(False) %}
+{% set monit_monitor_test = monit_monitor_test + ' AND EXPECT ' %}
+{% endif %}
+{% set monit_monitor_test = monit_monitor_test + '"' + test.test_connection.value + '"' %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if (test.test_connection.timeout | default(0)) > 0 %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH TIMEOUT ' + (test.test_connection.timeout | string) + ' SECONDS' %}
+{% endif %}
+{% if (test.test_connection.retry | default(0)) > 0 %}
+{% set monit_monitor_test = monit_monitor_test + ' AND RETRY ' + (test.test_connection.retry | string) %}
+{% endif %}
+{% if monit_monitor_type == 'HOST' %}
+{% if ((test.test_connection.protocol | default('')) == 'mysql') and (test.test_connection.username is defined) and monit_mysql_auth_script %}
+{% set monit_monitor_test = '' %}
+{% set monit_custom_monitor_host = (test.test_connection.host is defined | ternary(test.test_connection.host, monit_monitor.host)) %}
+{% set monit_custom_monitor_alerts = (monit_monitor.alerts is defined | ternary(monit_monitor.alerts, [])) %}
+{% set monit_custom_monitor_noalert = (monit_monitor.noalert is defined | ternary(monit_monitor.noalert, [])) %}
+{% set monit_custom_monitor_type = 'PROGRAM' %}
+{% set monit_custom_monitor_name = monit_monitor.name + '_mysql_' + monit_custom_monitor_host + '_' + test.test_connection.username %}
+{% set monit_custom_monitor_path = monit_scripts_dir + '/mysql-client-' + monit_custom_monitor_host + '-' + test.test_connection.username + '.sh' %}
+{% set monit_custom_monitor_test = 'STATUS != 0' %}
+{% set monit_monitor_custom_monitors = monit_monitor_custom_monitors + [ { 'type': monit_custom_monitor_type, 'name': monit_custom_monitor_name, 'path': monit_custom_monitor_path, 'test': monit_custom_monitor_test, 'alerts': monit_custom_monitor_alerts, 'noalert': monit_custom_monitor_noalert, 'test_data': test } ] %}
+{% elif ((test.test_connection.protocol | default('')) == 'ssh_command') and (test.test_connection.username is defined) and (test.test_connection.identity is defined) %}
+{% set monit_monitor_test = '' %}
+{% set monit_custom_monitor_host = (test.test_connection.host is defined | ternary(test.test_connection.host, monit_monitor.host)) %}
+{% set monit_custom_monitor_alerts = (monit_monitor.alerts is defined | ternary(monit_monitor.alerts, [])) %}
+{% set monit_custom_monitor_noalert = (monit_monitor.noalert is defined | ternary(monit_monitor.noalert, [])) %}
+{% set monit_custom_monitor_type = 'PROGRAM' %}
+{% set monit_custom_monitor_name = monit_monitor.name + '_ssh_command_' + monit_custom_monitor_host + '_' + test.test_connection.username %}
+{% set monit_custom_monitor_path = monit_scripts_dir + '/ssh-command-' + monit_custom_monitor_host + '-' + test.test_connection.username + '.sh' %}
+{% set monit_custom_monitor_test = 'STATUS != 0' %}
+{% if monit_monitor_custom_monitors.append({ 'type': monit_custom_monitor_type, 'name': monit_custom_monitor_name, 'path': monit_custom_monitor_path, 'test': monit_custom_monitor_test, 'alerts': monit_custom_monitor_alerts, 'noalert': monit_custom_monitor_noalert, 'test_data': test }) %}{% endif %}
+{% elif ((test.test_connection.protocol | default('')) == 'varnish_backend') and (test.test_connection.version is defined) %}
+{% set monit_monitor_test = '' %}
+{% set monit_custom_monitor_host = (test.test_connection.host is defined | ternary(test.test_connection.host, monit_monitor.host)) %}
+{% set monit_custom_monitor_alerts = (monit_monitor.alerts is defined | ternary(monit_monitor.alerts, [])) %}
+{% set monit_custom_monitor_noalert = (monit_monitor.noalert is defined | ternary(monit_monitor.noalert, [])) %}
+{% set monit_custom_monitor_type = 'PROGRAM' %}
+{% set monit_custom_monitor_name = monit_monitor.name + '_varnish_backend_' + monit_custom_monitor_host %}
+{% set monit_custom_monitor_path = monit_scripts_dir + '/varnish-backend-' + monit_custom_monitor_host + '.sh' %}
+{% set monit_custom_monitor_test = 'STATUS != 0' %}
+{% set monit_monitor_custom_monitors = monit_monitor_custom_monitors + [ { 'type': monit_custom_monitor_type, 'name': monit_custom_monitor_name, 'path': monit_custom_monitor_path, 'test': monit_custom_monitor_test, 'alerts': monit_custom_monitor_alerts, 'noalert': monit_custom_monitor_noalert, 'test_data': test } ] %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if monit_monitor_test | length > 0 %}
+{% if monit_monitor_test_number[0] == 0 %}
+CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
+{% if monit_monitor_type == 'PROCESS' %}
+{% if monit_monitor.pid is defined %}
+  WITH PIDFILE {{ monit_monitor.pid }}
+{% elif monit_monitor.regex is defined %}
+  WITH MATCHING "{{ monit_monitor.regex }}"
+{% endif %}
+{% elif monit_monitor_type == 'FILE' %}
+  WITH PATH "{{ monit_monitor.path }}"
+{% elif monit_monitor_type == 'FIFO' %}
+  WITH PATH "{{ monit_monitor.path }}"
+{% elif monit_monitor_type == 'FILESYSTEM' %}
+  WITH PATH "{{ monit_monitor.path }}"
+{% elif monit_monitor_type == 'DIRECTORY' %}
+  WITH PATH "{{ monit_monitor.path }}"
+{% elif monit_monitor_type == 'HOST' %}
+  WITH ADDRESS {{ monit_monitor.host }}
+{% elif monit_monitor_type == 'PROGRAM' %}
+  WITH PATH "{{ monit_monitor.path }}"
+{% if monit_monitor.uid is defined %}
+  AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.gid is defined %}
+  AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.timeout %}
+  TIMEOUT {{ monit_monitor.timeout }} SECONDS
+{% endif %}
+{% elif monit_monitor_type == 'NETWORK' %}
+{% if monit_monitor.address is defined %}
+  WITH ADDRESS {{ monit_monitor.address }}
+{% elif monit_monitor.interface is defined %}
+  WITH INTERFACE {{ monit_monitor.interface }}
+{% endif %}
+{% endif %}
+{% if monit_monitor.every_cycles is defined %}
+  EVERY {{ monit_monitor.every_cycles }} CYCLES
+{% elif monit_monitor.every_cron is defined %}
+  EVERY "{{ monit_monitor.every_cron }}"
+{% elif monit_monitor.not_every_cron is defined %}
+  NOT EVERY "{{ monit_monitor.not_every_cron }}"
+{% endif %}
+{% if monit_monitor.start is defined %}
+
+  START PROGRAM = "{{ monit_monitor.start.command }}"
+{% if monit_monitor.start.uid is defined %}
+    AS UID "{{ monit_monitor.start.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.start.gid is defined %}
+    AND WITH GID "{{ monit_monitor.start.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.start.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.start.timeout }} SECONDS
+{% endif %}
+{% endif %}
+{% if monit_monitor.stop is defined %}
+
+  STOP PROGRAM = "{{ monit_monitor.stop.command }}"
+{% if monit_monitor.stop.uid is defined %}
+    AS UID "{{ monit_monitor.stop.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.stop.gid is defined %}
+    AND WITH GID "{{ monit_monitor.stop.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.stop.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.stop.timeout }} SECONDS
+{% endif %}
+{% endif %}
+{% if monit_monitor.restart is defined %}
+
+  RESTART PROGRAM = "{{ monit_monitor.restart.command }}"
+{% if monit_monitor.restart.uid is defined %}
+    AS UID "{{ monit_monitor.restart.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.restart.gid is defined %}
+    AND WITH GID "{{ monit_monitor.restart.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.restart.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.restart.timeout }} SECONDS
+{% endif %}
+{% if monit_monitor.restart.limit is defined %}
+  IF {{ monit_monitor.restart.limit.number }} RESTARTS
+    WITHIN {{ monit_monitor.restart.limit.cycles }} CYCLES
+{% if monit_monitor.restart.limit.action_restart | default(False) %}
+    THEN RESTART
+{% elif monit_monitor.restart.limit.action_start | default(False) %}
+    THEN START
+{% elif monit_monitor.restart.limit.action_stop | default(False) %}
+    THEN STOP
+{% elif monit_monitor.restart.limit.action_exec is defined %}
+    THEN EXEC "{{ monit_monitor.restart.limit.action_exec.command }}"
+{% if monit_monitor.restart.limit.action_exec.uid is defined %}
+      AS UID "{{ monit_monitor.restart.limit.action_exec.uid }}"
+{% elif monit_monitor.restart.uid is defined %}
+      AS UID "{{ monit_monitor.restart.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.restart.limit.action_exec.gid is defined %}
+      AND WITH GID "{{ monit_monitor.restart.limit.action_exec.gid }}"
+{% elif monit_monitor.restart.gid is defined %}
+      AND WITH GID "{{ monit_monitor.restart.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.restart.limit.action_exec.repeat is defined %}
+      REPEAT EVERY {{ monit_monitor.restart.limit.action_exec.repeat }} CYCLES
+{% endif %}
+{% elif monit_monitor.restart.limit.action_unmonitor | default(False) %}
+    THEN UNMONITOR
+{% else %}
+    THEN ALERT
+{% endif %}
+{% endif %}
+{% endif %}
+{% if monit_monitor.group is defined %}
+
+  GROUP {{ monit_monitor.group }}
+{% endif %}
+{% if monit_monitor_type not in ['SYSTEM', 'PROGRAM'] %}
+  MODE {{ (monit_monitor.mode_active | default(True)) | ternary('ACTIVE', 'PASSIVE') }}
+{% endif %}
+{% if monit_test_onreboot_available %}
+{% if monit_monitor.onreboot_nostart | default(False) %}
+  ONREBOOT NOSTART
+{% elif monit_monitor.onreboot_laststate | default(False) %}
+  ONREBOOT LASTSTATE
+{% else %}
+  ONREBOOT START
+{% endif %}
+{% endif %}
+{% if monit_monitor.depends is defined %}
+
+  DEPENDS ON {{ monit_monitor.depends | join(', ') }}
+{% endif %}
+
+{% endif %}
+{% if monit_monitor_test_number.append(monit_monitor_test_number.pop() + 1) %}{% endif %}
+## Test Nr. {{ monit_monitor_test_number[0] }}
+  IF {{ monit_monitor_test }}
+{% if test.tolerance is defined and test.tolerance.cycles is defined %}
+{% if test.tolerance.times is defined %}
+    FOR {{ test.tolerance.times }} TIMES WITHIN {{ test.tolerance.cycles }} CYCLES
+{% else %}
+    FOR {{ test.tolerance.cycles }} CYCLES
+{% endif %}
+{% endif %}
+{% if test.action_restart | default(False) %}
+    THEN RESTART
+{% elif test.action_start | default(False) %}
+    THEN START
+{% elif test.action_stop | default(False) %}
+    THEN STOP
+{% elif test.action_exec is defined %}
+    THEN EXEC "{{ test.action_exec.command }}"
+{% if test.action_exec.uid is defined %}
+      AS UID "{{ test.action_exec.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if test.action_exec.gid is defined %}
+      AND WITH GID "{{ test.action_exec.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if test.action_exec.repeat is defined %}
+      REPEAT EVERY {{ test.action_exec.repeat }} CYCLES
+{% endif %}
+{% elif test.action_unmonitor | default(False) %}
+    THEN UNMONITOR
+{% else %}
+    THEN ALERT
+{% endif %}
+{% if test.succeeded_action_restart | default(False) %}
+    ELSE IF SUCCEEDED THEN RESTART
+{% elif test.succeeded_action_start | default(False) %}
+    ELSE IF SUCCEEDED THEN START
+{% elif test.succeeded_action_stop | default(False) %}
+    ELSE IF SUCCEEDED THEN STOP
+{% elif test.succeeded_action_exec is defined %}
+    ELSE IF SUCCEEDED THEN EXEC "{{ test.succeeded_action_exec.command }}"
+{% if test.succeeded_action_exec.uid is defined %}
+      AS UID "{{ test.succeeded_action_exec.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if test.succeeded_action_exec.gid is defined %}
+      AND WITH GID "{{ test.succeeded_action_exec.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if test.succeeded_action_exec.repeat is defined %}
+      REPEAT EVERY {{ test.succeeded_action_exec.repeat }} CYCLES
+{% endif %}
+{% elif test.succeeded_action_unmonitor | default(False) %}
+    ELSE IF SUCCEEDED THEN UNMONITOR
+{% elif test.succeeded_action_alert | default(False) %}
+    ELSE IF SUCCEEDED THEN ALERT
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if monit_monitor_test_number[0] > 0 %}
+{% if monit_monitor_type == 'FILE' %}
+{% if monit_monitor.ignore_content is defined %}
+{% for ignore_content in monit_monitor.ignore_content %}
+{% if ignore_content.regex is defined or ignore_content.path is defined %}
+  IGNORE CONTENT {{ (ignore_content.match | default(True)) | ternary('=', '!=') }} {{ (ignore_content.regex is defined) | ternary(ignore_content.regex, ignore_content.path) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if monit_monitor.alerts is defined %}
+{% for alert in monit_monitor.alerts %}
+  ALERT {{ alert.email }}
+{% if (alert.events | default([])) | length > 0 %}
+    ONLY ON { {{ alert.events | join(', ') }} }
+{% endif %}
+{% if alert.mail_format is defined %}
+    WITH MAIL-FORMAT {
+{% for key in monit_mail_format_fields %}
+{% if alert.mail_format[key] is defined %}
+      {{ key | upper }}: {{ alert.mail_format[key] }}
+{% endif %}
+{% endfor %}
+    }
+{% endif %}
+{% if (alert.reminder | default(0)) > 0 %}
+    WITH REMINDER ON {{ alert.reminder }} CYCLES
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if monit_monitor.noalert is defined %}
+{% for email in monit_monitor.noalert %}
+  NOALERT {{ email }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if monit_monitor_custom_monitors | length > 0 %}
+{% for custom_monitor in monit_monitor_custom_monitors %}
+
+CHECK {{ custom_monitor.type }} {{ custom_monitor.name }}
+{% if custom_monitor.type == 'PROGRAM' %}
+  WITH PATH "{{ custom_monitor.path }}"
+{% endif %}
+{% if monit_monitor.every_cycles is defined %}
+  EVERY {{ monit_monitor.every_cycles }} CYCLES
+{% elif monit_monitor.every_cron is defined %}
+  EVERY "{{ monit_monitor.every_cron }}"
+{% elif monit_monitor.not_every_cron is defined %}
+  NOT EVERY "{{ monit_monitor.not_every_cron }}"
+{% endif %}
+{% if monit_monitor.start is defined %}
+
+  START PROGRAM = "{{ monit_monitor.start.command }}"
+{% if monit_monitor.start.uid is defined %}
+    AS UID "{{ monit_monitor.start.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.start.gid is defined %}
+    AND WITH GID "{{ monit_monitor.start.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.start.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.start.timeout }} SECONDS
+{% endif %}
+{% endif %}
+{% if monit_monitor.stop is defined %}
+
+  STOP PROGRAM = "{{ monit_monitor.stop.command }}"
+{% if monit_monitor.stop.uid is defined %}
+    AS UID "{{ monit_monitor.stop.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.stop.gid is defined %}
+    AND WITH GID "{{ monit_monitor.stop.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.stop.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.stop.timeout }} SECONDS
+{% endif %}
+{% endif %}
+{% if monit_monitor.restart is defined %}
+
+  RESTART PROGRAM = "{{ monit_monitor.restart.command }}"
+{% if monit_monitor.restart.uid is defined %}
+    AS UID "{{ monit_monitor.restart.uid }}"
+{% elif monit_monitor.uid is defined %}
+    AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.restart.gid is defined %}
+    AND WITH GID "{{ monit_monitor.restart.gid }}"
+{% elif monit_monitor.gid is defined %}
+    AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.restart.timeout is defined %}
+    WITH TIMEOUT {{ monit_monitor.restart.timeout }} SECONDS
+{% endif %}
+{% if monit_monitor.restart.limit is defined %}
+  IF {{ monit_monitor.restart.limit.number }} RESTARTS
+    WITHIN {{ monit_monitor.restart.limit.cycles }} CYCLES
+{% if monit_monitor.restart.limit.action_restart | default(False) %}
+    THEN RESTART
+{% elif monit_monitor.restart.limit.action_start | default(False) %}
+    THEN START
+{% elif monit_monitor.restart.limit.action_stop | default(False) %}
+    THEN STOP
+{% elif monit_monitor.restart.limit.action_exec is defined %}
+    THEN EXEC "{{ monit_monitor.restart.limit.action_exec.command }}"
+{% if monit_monitor.restart.limit.action_exec.uid is defined %}
+      AS UID "{{ monit_monitor.restart.limit.action_exec.uid }}"
+{% elif monit_monitor.restart.uid is defined %}
+      AS UID "{{ monit_monitor.restart.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if monit_monitor.restart.limit.action_exec.gid is defined %}
+      AND WITH GID "{{ monit_monitor.restart.limit.action_exec.gid }}"
+{% elif monit_monitor.restart.gid is defined %}
+      AND WITH GID "{{ monit_monitor.restart.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if monit_monitor.restart.limit.action_exec.repeat is defined %}
+      REPEAT EVERY {{ monit_monitor.restart.limit.action_exec.repeat }} CYCLES
+{% endif %}
+{% elif monit_monitor.restart.limit.action_unmonitor | default(False) %}
+    THEN UNMONITOR
+{% else %}
+    THEN ALERT
+{% endif %}
+{% endif %}
+{% endif %}
+{% if monit_monitor.group is defined %}
+
+  GROUP {{ monit_monitor.group }}
+{% endif %}
+{% if custom_monitor.type not in ['SYSTEM', 'PROGRAM'] %}
+  MODE {{ (monit_monitor.mode_active | default(True)) | ternary('ACTIVE', 'PASSIVE') }}
+{% endif %}
+{% if monit_test_onreboot_available %}
+{% if monit_monitor.onreboot_nostart | default(False) %}
+  ONREBOOT NOSTART
+{% elif monit_monitor.onreboot_laststate | default(False) %}
+  ONREBOOT LASTSTATE
+{% else %}
+  ONREBOOT START
+{% endif %}
+{% endif %}
+{% if monit_monitor.depends is defined %}
+
+  DEPENDS ON {{ monit_monitor.depends | join(', ') }}
+{% endif %}
+
+  IF {{ custom_monitor.test }}
+{% if custom_monitor.test_data.tolerance is defined and custom_monitor.test_data.tolerance.cycles is defined %}
+{% if custom_monitor.test_data.tolerance.times is defined %}
+    FOR {{ custom_monitor.test_data.tolerance.times }} TIMES WITHIN {{ custom_monitor.test_data.tolerance.cycles }} CYCLES
+{% else %}
+    FOR {{ custom_monitor.test_data.tolerance.cycles }} CYCLES
+{% endif %}
+{% endif %}
+{% if custom_monitor.test_data.action_restart | default(False) %}
+    THEN RESTART
+{% elif custom_monitor.test_data.action_start | default(False) %}
+    THEN START
+{% elif custom_monitor.test_data.action_stop | default(False) %}
+    THEN STOP
+{% elif custom_monitor.test_data.action_exec is defined %}
+    THEN EXEC "{{ custom_monitor.test_data.action_exec.command }}"
+{% if custom_monitor.test_data.action_exec.uid is defined %}
+      AS UID "{{ custom_monitor.test_data.action_exec.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if custom_monitor.test_data.action_exec.gid is defined %}
+      AND WITH GID "{{ custom_monitor.test_data.action_exec.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if custom_monitor.test_data.action_exec.repeat is defined %}
+      REPEAT EVERY {{ custom_monitor.test_data.action_exec.repeat }} CYCLES
+{% endif %}
+{% elif custom_monitor.test_data.action_unmonitor | default(False) %}
+    THEN UNMONITOR
+{% else %}
+    THEN ALERT
+{% endif %}
+{% if custom_monitor.test_data.succeeded_action_restart | default(False) %}
+    ELSE IF SUCCEEDED THEN RESTART
+{% elif custom_monitor.test_data.succeeded_action_start | default(False) %}
+    ELSE IF SUCCEEDED THEN START
+{% elif custom_monitor.test_data.succeeded_action_stop | default(False) %}
+    ELSE IF SUCCEEDED THEN STOP
+{% elif custom_monitor.test_data.succeeded_action_exec is defined %}
+    ELSE IF SUCCEEDED THEN EXEC "{{ custom_monitor.test_data.succeeded_action_exec.command }}"
+{% if custom_monitor.test_data.succeeded_action_exec.uid is defined %}
+      AS UID "{{ custom_monitor.test_data.succeeded_action_exec.uid }}"
+{% elif monit_monitor.uid is defined %}
+      AS UID "{{ monit_monitor.uid }}"
+{% endif %}
+{% if custom_monitor.test_data.succeeded_action_exec.gid is defined %}
+      AND WITH GID "{{ custom_monitor.test_data.succeeded_action_exec.gid }}"
+{% elif monit_monitor.gid is defined %}
+      AND WITH GID "{{ monit_monitor.gid }}"
+{% endif %}
+{% if custom_monitor.test_data.succeeded_action_exec.repeat is defined %}
+      REPEAT EVERY {{ custom_monitor.test_data.succeeded_action_exec.repeat }} CYCLES
+{% endif %}
+{% elif custom_monitor.test_data.succeeded_action_unmonitor | default(False) %}
+    ELSE IF SUCCEEDED THEN UNMONITOR
+{% elif custom_monitor.test_data.succeeded_action_alert | default(False) %}
+    ELSE IF SUCCEEDED THEN ALERT
+{% endif %}
+{% if custom_monitor.alerts is defined %}
+{% for alert in custom_monitor.alerts %}
+  ALERT {{ alert.email }}
+{% if (alert.events | default([])) | length > 0 %}
+    ONLY ON { {{ alert.events | join(', ') }} }
+{% endif %}
+{% if alert.mail_format is defined %}
+    WITH MAIL-FORMAT {
+{% for key in monit_mail_format_fields %}
+{% if alert.mail_format[key] is defined %}
+      {{ key | upper }}: {{ alert.mail_format[key] }}
+{% endif %}
+{% endfor %}
+    }
+{% endif %}
+{% if (alert.reminder | default(0)) > 0 %}
+    WITH REMINDER ON {{ alert.reminder }} CYCLES
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if custom_monitor.noalert is defined %}
+{% for email in custom_monitor.noalert %}
+  NOALERT {{ email }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% else %}
+# No valid monitor defined
+{% endif %}

@@ -1,0 +1,70 @@
+# {{ ansible_managed }}
+
+{% if monit_httpd_unixsocket | length > 0 %}
+SET HTTPD UNIXSOCKET {{ monit_httpd_unixsocket }}
+{% else %}
+SET HTTPD PORT {{ monit_httpd_port }}
+  AND USE ADDRESS {{ monit_httpd_address }}
+{% if not monit_httpd_signature %}
+  SIGNATURE DISABLE
+{% endif %}
+{% if monit_httpd_ssl %}
+{% if monit_httpd_ssl_options_available %}
+{% if monit_httpd_ssl_options | length > 0 %}
+  WITH SSL {
+{% if 'version' in monit_ssl_fields %}
+    VERSION: {{ monit_httpd_ssl_options.version | default('tlsv12') }}
+{% endif %}
+{% if 'verify' in monit_ssl_fields %}
+    VERIFY: {{ (monit_httpd_ssl_options.verify | default(True)) | ternary('ENABLE', 'DISABLE') }}
+{% endif %}
+{% if 'selfsigned' in monit_ssl_fields %}
+    SELFSIGNED: {{ (monit_httpd_ssl_options.selfsigned | default(False)) | ternary('ALLOW', 'REJECT') }}
+{% endif %}
+{% if ('ciphers' in monit_ssl_fields) and (monit_httpd_ssl_options.ciphers is defined) %}
+    CIPHERS: "{{ monit_httpd_ssl_options.ciphers }}"
+{% endif %}
+{% if ('httpd_pem' in monit_ssl_fields) and (monit_httpd_ssl_options.httpd_pem is defined) %}
+    PEMFILE: "{{ monit_httpd_ssl_options.httpd_pem }}"
+{% endif %}
+{% if ('client_pem' in monit_ssl_fields) and (monit_httpd_ssl_options.client_pem is defined) %}
+    CLIENTPEMFILE: "{{ monit_httpd_ssl_options.client_pem }}"
+{% endif %}
+{% if ('ca_pem' in monit_ssl_fields) and (monit_httpd_ssl_options.ca_pem is defined) %}
+    CACERTIFICATEFILE: "{{ monit_httpd_ssl_options.ca_pem }}"
+{% endif %}
+{% if ('ca_dir' in monit_ssl_fields) and (monit_httpd_ssl_options.ca_dir is defined) %}
+    CACERTIFICATEPATH: "{{ monit_httpd_ssl_options.ca_dir }}"
+{% endif %}
+  }
+{% else %}
+  WITH SSL
+{% endif %}
+{% else %}
+{% if monit_httpd_ssl_options | length > 0 %}
+  SSL ENABLE
+{% if monit_httpd_ssl_options.httpd_pem is defined %}
+  PEMFILE "{{ monit_httpd_ssl_options.httpd_pem }}"
+{% endif %}
+{% if monit_httpd_ssl_options.client_pem is defined %}
+  CLIENTPEMFILE "{{ monit_httpd_ssl_options.client_pem }}"
+{% endif %}
+{% if monit_httpd_ssl_options.selfsigned | default(False) %}
+  ALLOWSELFCERTIFICATION
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if monit_httpd_acl | length > 0 %}
+{% for acl in monit_httpd_acl %}
+{% if acl.host is defined %}
+  ALLOW {{ acl.host }}{% if acl.readonly | default(False) %} READ-ONLY{% endif %}
+{% elif acl.user is defined and acl.password is defined %}
+  ALLOW {{ acl.user + ':' + acl.password }}{% if acl.readonly | default(False) %} READ-ONLY{% endif %}
+{% elif acl.group is defined %}
+  ALLOW @{{ acl.group }}{% if acl.readonly | default(False) %} READ-ONLY{% endif %}
+{% endif %}
+
+{% endfor %}
+{% endif %}
