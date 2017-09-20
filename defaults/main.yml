@@ -388,11 +388,11 @@ monit_monitors: []
 #         headers: {}
 #         content: '<a href="foo">bar</a>'
 #         properties:
-#           name: loglimit
-#           greater: True (Default)
-#           less: False
-#           equal: False
-#           value: 10
+#           - name: loglimit
+#             greater: True (Default)
+#             less: False
+#             equal: False
+#             value: 10
 #         target: valid@uri
 #         max_forward: 6
 #         origin: http://websocket.com
