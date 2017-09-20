@@ -1,0 +1,15 @@
+---
+- include: ssh-command-script.yml
+  vars:
+    monit_ssh_host: "{{ (monit_monitor.1.test_connection.host is defined | ternary(monit_monitor.1.test_connection.host, monit_monitor.0.host)) }}"
+    monit_ssh_port: "{{ monit_monitor.1.test_connection.port | default(22) }}"
+    monit_ssh_username: "{{ monit_monitor.1.test_connection.username }}"
+    monit_ssh_identity: "{{ monit_monitor.1.test_connection.identity }}"
+    monit_ssh_command: "{{ monit_monitor.1.test_connection.command | default('pwd') }}"
+  with_subelements:
+    - "{{ monit_monitors }}"
+    - tests
+  loop_control:
+    loop_var: monit_monitor
+  static: False
+  when: (monit_monitor.0.monitor_host | default(False)) and (monit_monitor.1.test_connection is defined) and ((monit_monitor.1.test_connection.protocol | default('')) == 'ssh_command') and (monit_monitor.1.test_connection.username is defined) and (monit_monitor.1.test_connection.identity is defined)

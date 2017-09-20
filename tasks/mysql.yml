@@ -1,0 +1,14 @@
+---
+- include: mysql-auth-script.yml
+  vars:
+    monit_mysql_host: "{{ (monit_monitor.1.test_connection.host is defined | ternary(monit_monitor.1.test_connection.host, monit_monitor.0.host)) }}"
+    monit_mysql_port: "{{ monit_monitor.1.test_connection.port | default(3306) }}"
+    monit_mysql_username: "{{ monit_monitor.1.test_connection.username }}"
+    monit_mysql_password: "{{ monit_monitor.1.test_connection.password | default('') }}"
+  with_subelements:
+    - "{{ monit_monitors }}"
+    - tests
+  loop_control:
+    loop_var: monit_monitor
+  static: False
+  when: monit_mysql_auth_script and (monit_monitor.0.monitor_host | default(False)) and (monit_monitor.1.test_connection is defined) and ((monit_monitor.1.test_connection.protocol | default('')) == 'mysql') and (monit_monitor.1.test_connection.username is defined)

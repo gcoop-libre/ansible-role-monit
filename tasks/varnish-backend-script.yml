@@ -1,0 +1,8 @@
+---
+- name: Copy scripts to test Varnish backend {{ monit_varnish_backend }}
+  template:
+    src: scripts/varnish-backend-test.sh.j2
+    dest: "{{ monit_scripts_dir }}/varnish-backend-{{ monit_varnish_backend }}.sh"
+    owner: root
+    group: root
+    mode: '0500'

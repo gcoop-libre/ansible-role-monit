@@ -1,0 +1,8 @@
+---
+- name: Copy scripts to test SSH commands by {{ monit_ssh_username }} on {{ monit_ssh_host }}
+  template:
+    src: scripts/ssh-command-test.sh.j2
+    dest: "{{ monit_scripts_dir }}/ssh-command-{{ monit_ssh_host }}-{{ monit_ssh_username }}.sh"
+    owner: root
+    group: root
+    mode: '0500'

@@ -1,0 +1,43 @@
+---
+- name: Generate monitrc config.
+  template:
+    src: config/monitrc.j2
+    dest: "{{ monit_monitrc }}"
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart monit
+
+- name: Generate monit httpd config.
+  template:
+    src: config/httpd.j2
+    dest: "{{ monit_conf_common_dir }}/httpd"
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart monit
+  when: monit_httpd
+
+- name: Remove monit httpd config.
+  file:
+    path: "{{ monit_conf_common_dir }}/httpd"
+    state: absent
+  notify: restart monit
+  when: not monit_httpd
+
+- name: Generate mail config.
+  template:
+    src: config/mail.j2
+    dest: "{{ monit_conf_common_dir }}/mail"
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart monit
+  when: monit_mail
+
+- name: Remove mail config.
+  file:
+    path: "{{ monit_conf_common_dir }}/mail"
+    state: absent
+  notify: restart monit
+  when: not monit_mail

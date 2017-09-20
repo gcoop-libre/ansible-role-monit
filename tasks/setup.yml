@@ -1,0 +1,39 @@
+---
+- name: Ensure monit is installed.
+  apt:
+    name: monit
+    update_cache: yes
+    cache_valid_time: 3600
+    state: present
+
+- name: Ensure config directories exists.
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  with_items:
+    - "{{ monit_conf_dir }}"
+    - "{{ monit_conf_common_dir }}"
+    - "{{ monit_conf_available_dir }}"
+    - "{{ monit_conf_enabled_dir }}"
+    - "{{ monit_scripts_dir }}"
+
+- name: Ensure lib directories exists.
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  with_items:
+    - "{{ monit_lib_dir }}"
+
+- name: Ensure event queue directory exists.
+  file:
+    path: "{{ monit_lib_queue_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
