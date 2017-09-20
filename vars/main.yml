@@ -1,0 +1,53 @@
+---
+monit_monitrc: "{{ monit_conf_dir }}/monitrc"
+monit_conf_common_dir: "{{ monit_conf_dir }}/conf.d"
+monit_conf_available_dir: "{{ monit_conf_dir }}/conf-available"
+monit_conf_enabled_dir: "{{ monit_conf_dir }}/conf-enabled"
+monit_scripts_dir: "{{ monit_conf_dir }}/scripts"
+
+monit_lib_state: "{{ monit_lib_dir }}/state"
+monit_lib_id: "{{ monit_lib_dir }}/id"
+monit_lib_queue_dir: "{{ monit_lib_dir }}/events"
+
+monit_mail_format_fields:
+  - from
+  - reply-to
+  - subject
+  - message
+
+monit_limits_fields_516:
+  - program_output
+  - send_expect_buffer
+  - file_content_buffer
+  - http_content_buffer
+  - network_timeout
+monit_limits_fields_520:
+  - program_timeout
+  - stop_timeout
+  - start_timeout
+  - restart_timeout
+monit_limits_fields: "{{ ((ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.04', '>='))) | ternary(monit_limits_fields_516, []) }} + {{ ((ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('17.04', '>='))) | ternary(monit_limits_fields_520, []) }}"
+
+monit_ssl_fields_515:
+  - version
+  - verify
+  - selfsigned
+  - client_pem
+  - ca_pem
+  - ca_dir
+monit_ssl_fields_521:
+  - ciphers
+  - httpd_pem
+monit_ssl_fields: "{{ ((ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.04', '>='))) | ternary(monit_ssl_fields_515, []) }} + {{ ((ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('17.04', '>'))) | ternary(monit_ssl_fields_521, []) }}"
+
+monit_httpd_ssl_options_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('17.04', '>')) }}"
+
+monit_mail_ssl_options_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.04', '>=')) }}"
+
+monit_test_ssl_options_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.04', '>=')) }}"
+
+monit_test_onreboot_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.10', '>=')) }}"
+
+monit_test_total_memory_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('8', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('14.10', '>=')) }}"
+
+monit_mysql_auth_script: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '<')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.10', '<')) }}"

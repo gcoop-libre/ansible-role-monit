@@ -1,0 +1,79 @@
+# {{ ansible_managed }}
+
+SET MAILSERVER {{ monit_mail_host }} WITH PORT {{ monit_mail_port }}
+{% if (monit_mail_user | length > 0) and (monit_mail_password | length > 0) %}
+  WITH USERNAME "{{ monit_mail_user }}" WITH PASSWORD "{{ monit_mail_password }}"
+{% endif %}
+{% if monit_mail_ssl %}
+{% if monit_mail_ssl_options_available %}
+  USING SSL
+{% if monit_mail_ssl_options | length > 0 %}
+  WITH OPTIONS {
+{% if ('version' in monit_ssl_fields) and (monit_mail_ssl_options.version is defined) %}
+    VERSION: {{ monit_mail_ssl_options.version }}
+{% endif %}
+{% if ('verify' in monit_ssl_fields) and (monit_mail_ssl_options.verify is defined) %}
+    VERIFY: {{ monit_mail_ssl_options.verify | ternary('ENABLE', 'DISABLE') }}
+{% endif %}
+{% if ('selfsigned' in monit_ssl_fields) and (monit_mail_ssl_options.selfsigned is defined) %}
+    SELFSIGNED: {{ monit_mail_ssl_options.selfsigned | ternary('ALLOW', 'REJECT') }}
+{% endif %}
+{% if ('ciphers' in monit_ssl_fields) and (monit_mail_ssl_options.ciphers is defined) %}
+    CIPHERS: {{ monit_mail_ssl_options.ciphers }}
+{% endif %}
+{% if ('client_pem' in monit_ssl_fields) and (monit_mail_ssl_options.client_pem is defined) %}
+    CLIENTPEMFILE: {{ monit_mail_ssl_options.client_pem }}
+{% endif %}
+{% if ('ca_pem' in monit_ssl_fields) and (monit_mail_ssl_options.ca_pem is defined) %}
+    CACERTIFICATEFILE: {{ monit_mail_ssl_options.ca_pem }}
+{% endif %}
+{% if ('ca_dir' in monit_ssl_fields) and (monit_mail_ssl_options.ca_dir is defined) %}
+    CACERTIFICATEPATH: {{ monit_mail_ssl_options.ca_dir }}
+{% endif %}
+  }
+{% endif %}
+{% else %}
+{% if (monit_mail_ssl_options.version is defined) and ((monit_mail_ssl_options.version | lower) != 'auto') %}
+  USING {{ monit_mail_ssl_options.version }}
+{% else %}
+  USING SSLAUTO
+{% endif %}
+{% endif %}
+{% endif %}
+{% if monit_mail_timeout > 0 %}
+  WITH TIMEOUT {{ monit_mail_timeout }} SECONDS
+{% endif %}
+{% if monit_mail_hostname | length > 0 %}
+  USING HOSTNAME {{ monit_mail_hostname }}
+{% endif %}
+
+{% if monit_mail_format | length > 0 %}
+SET MAIL-FORMAT {
+{% for key in monit_mail_format_fields %}
+{% if monit_mail_format[key] is defined %}
+  {{ key | upper }}: {{ monit_mail_format[key] }}
+{% endif %}
+{% endfor %}
+}
+{% endif %}
+
+{% if monit_alerts | length > 0 %}
+{% for alert in monit_alerts %}
+SET ALERT {{ alert.email }}
+{% if (alert.events | default([])) | length > 0 %}
+  ONLY ON { {{ alert.events | join(', ') }} }
+{% endif %}
+{% if alert.mail_format is defined %}
+  WITH MAIL-FORMAT {
+{% for key in monit_mail_format_fields %}
+{% if alert.mail_format[key] is defined %}
+    {{ key | upper }}: {{ alert.mail_format[key] }}
+{% endif %}
+{% endfor %}
+  }
+{% endif %}
+{% if (alert.reminder | default(0)) > 0 %}
+  WITH REMINDER ON {{ alert.reminder }} CYCLES
+{% endif %}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,4 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+/usr/bin/mysql --defaults-extra-file={{ monit_scripts_dir }}/{{ monit_mysql_host }}-{{ monit_mysql_username }}.cnf --host={{ monit_mysql_host }} --port={{ monit_mysql_port }} --execute='SELECT 1'

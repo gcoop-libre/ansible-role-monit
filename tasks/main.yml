@@ -1,0 +1,6 @@
+---
+- include: setup.yml
+
+- include: config.yml
+
+- include: monitors.yml

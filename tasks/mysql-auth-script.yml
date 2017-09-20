@@ -1,0 +1,16 @@
+---
+- name: Copy {{ monit_mysql_username }} credentials for {{ monit_mysql_host }}
+  template:
+    src: scripts/mysql-credentials.cnf.j2
+    dest: "{{ monit_scripts_dir }}/{{ monit_mysql_host }}-{{ monit_mysql_username }}.cnf"
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: Copy script to test connection of the user {{ monit_mysql_username }} to {{ monit_mysql_host }}
+  template:
+    src: scripts/mysql-client-test.sh.j2
+    dest: "{{ monit_scripts_dir }}/mysql-client-{{ monit_mysql_host }}-{{ monit_mysql_username }}.sh"
+    owner: root
+    group: root
+    mode: '0500'

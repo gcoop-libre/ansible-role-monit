@@ -1,0 +1,12 @@
+---
+- include: varnish-backend-script.yml
+  vars:
+    monit_varnish_backend: "{{ monit_monitor.1.test_connection.host is defined | ternary(monit_monitor.1.test_connection.host, monit_monitor.0.host)) }}"
+    monit_varnish_version: "{{ monit_monitor.1.test_connection.version }}"
+  with_subelements:
+    - "{{ monit_monitors }}"
+    - tests
+  loop_control:
+    loop_var: monit_monitor
+  static: False
+  when: (monit_monitor.0.monitor_host | default(False)) and (monit_monitor.1.test_connection is defined) and ((monit_monitor.1.test_connection.protocol | default('')) == 'varnish_backend') and (monit_monitor.1.test_connection.version is defined)
