@@ -1,0 +1,442 @@
+---
+monit_conf_dir: /etc/monit
+monit_lib_dir: /var/lib/monit
+
+monit_interval: 120
+monit_start_delay: 0
+monit_log: /var/log/monit.log
+monit_pid: ''
+
+monit_limits: {}
+# Available properties
+# program_output:
+#   value: 512
+#   unit: B
+# send_expect_buffer:
+#   value: 256
+#   unit: B
+# file_content_buffer:
+#   value: 512
+#   unit: B
+# http_content_buffer:
+#   value: 1
+#   unit: MB
+# network_timeout:
+#   value: 5
+#   unit: seconds
+# program_timeout:
+#   value: 300
+#   unit: seconds
+# stop_timeout:
+#   value: 30
+#   unit: seconds
+# start_timeout:
+#   value: 30
+#   unit: seconds
+# restart_timeout:
+#   value: 30
+#   unit: seconds
+
+monit_ssl: {}
+# Available properties
+# version: tlsv12 (Default)
+# verify: True (Default)
+# selfsigned: False (Default)
+# ciphers: ''
+# httpd_pem: /etc/monit/ssl/httpd.pem
+# client_pem: /etc/monit/ssl/clients.pem
+# ca_pem: /etc/monit/ssl/ca.pem
+# ca_dir: /usr/share/ca-certificates
+
+monit_queue_events: True
+monit_queue_slots: 100
+
+monit_mmonit: False
+monit_mmonit_ssl: True
+monit_mmonit_host: 192.168.1.10
+monit_mmonit_port: 8443
+monit_mmonit_user: monit
+monit_mmonit_password: monit
+monit_mmonit_uri: /collector
+monit_mmonit_timeout: 0
+monit_mmonit_credentials: True
+
+monit_httpd: True
+monit_httpd_unixsocket: ''
+monit_httpd_port: 2812
+monit_httpd_address: 127.0.0.1
+monit_httpd_signature: False
+monit_httpd_ssl: True
+monit_httpd_ssl_options: {}
+# Available properties
+# version: tlsv12 (Default)
+# verify: True (Default)
+# selfsigned: False (Default)
+# ciphers: ''
+# httpd_pem: /etc/monit/ssl/httpd.pem
+# client_pem: /etc/monit/ssl/clients.pem
+# ca_pem: /etc/monit/ssl/ca.pem
+# ca_dir: /usr/share/ca-certificates
+monit_httpd_acl: []
+# Available properties
+# - host: localhost
+#   readonly: False (Default)
+# - user: admin
+#   password: monit
+#   readonly: False (Default)
+# - group: monit
+#   readonly: False (Default)
+
+monit_mail: False
+monit_mail_host: localhost
+monit_mail_port: 25
+monit_mail_user: ''
+monit_mail_password: ''
+monit_mail_ssl: False
+monit_mail_ssl_options: {}
+# Available properties
+# version: tlsv12 (Default)
+# verify: True (Default)
+# selfsigned: False (Default)
+# ciphers: ''
+# client_pem: /etc/monit/ssl/clients.pem
+# ca_pem: /etc/monit/ssl/ca.pem
+# ca_dir: /usr/share/ca-certificates
+monit_mail_timeout: 5
+monit_mail_hostname: ''
+
+monit_mail_format: {}
+# Available properties
+# from: monit@foo.bar
+# reply-to: support@domain.com
+# subject: $SERVICE $EVENT at $DATE
+# message: |
+#   Monit $ACTION $SERVICE at $DATE on $HOST: $DESCRIPTION.
+#   Yours sincerely,
+#   monit
+
+monit_alerts: []
+# Available properties
+# - email: email@domain.com
+#   events: []
+#   reminder: 5
+#   mail_format:
+#     from: monit@foo.bar
+#     reply-to: support@domain.com
+#     subject: $SERVICE $EVENT at $DATE
+#     message: |
+#       Monit $ACTION $SERVICE at $DATE on $HOST: $DESCRIPTION.
+#       Yours sincerely,
+#       monit
+
+monit_monitors: []
+# Available properties
+# - name: sshd
+#   enabled: True (Default)
+#   monitor_process: False (Default)
+#   pid: /var/run/sshd.pid
+#   regex: ssh
+#   monitor_file: False (Default)
+#   path: /etc/init.d/ssh
+#   monitor_fifo: False (Default)
+#   monitor_filesystem: False (Default)
+#   monitor_directory: False (Default)
+#   monitor_host: False (Default)
+#   host: 192.168.10.10
+#   monitor_system: False (Default)
+#   monitor_program: False (Default)
+#   uid: monit
+#   gid: monit
+#   timeout: 30
+#   monitor_network: False (Default)
+#   address: 192.168.10.1
+#   interface: eth0
+#   start:
+#     command: /etc/init.d/ssh start
+#     uid: monit
+#     gid: monit
+#     timeout: 5
+#   stop:
+#     command: /etc/init.d/ssh stop
+#     uid: monit
+#     gid: monit
+#     timeout: 5
+#   restart:
+#     command: /etc/init.d/ssh restart
+#     uid: monit
+#     gid: monit
+#     timeout: 5
+#     limit:
+#       number: 2
+#       cycles: 5
+#       action_alert: True (Default)
+#       action_restart: False
+#       action_start: False
+#       action_stop: False
+#       action_exec:
+#         command: "/usr/local/bin/sms.sh"
+#         uid: monit
+#         gid: monit
+#         repeat: 5
+#       action_unmonitor: False
+#   every_cycles: 5
+#   every_cron: "* 8-19 * * 1-5"
+#   not_every_cron: "* 0-3 * * 0"
+#   group: www
+#   mode_active: True (Default)
+#   onreboot_start: True (Default)
+#   onreboot_nostart: False
+#   onreboot_laststate: False
+#   depends:
+#     - sshd_rc
+#   tests:
+#     - test_existence:
+#         exist: True (Default)
+#       test_load:
+#         interval_1min: True (Default)
+#         interval_5min: False
+#         interval_15min: False
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_cpu:
+#         user: False
+#         system: False
+#         wait: False
+#         total: False
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_threads:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_children:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_memory:
+#         total: False
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: B (Default)
+#       test_swap:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: B (Default)
+#       test_io:
+#         read: True (Default)
+#         operations: False (Default)
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: B (Default)
+#       test_checksum:
+#         changed: True (Default)
+#         failed: False
+#         sha1: True (Default)
+#         md5: False
+#         expected: cf32be630596d2ceff8582566d94b6eb5263191a
+#       test_timestamp:
+#         changed: True (Default)
+#         access: False
+#         modification: False
+#         change: False
+#         older: True (Default)
+#         newer: False
+#         greater: False
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: seconds (Default)
+#       test_size:
+#         changed: True (Default)
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: B (Default)
+#       test_content:
+#         match: True (Default)
+#         regex: .*
+#         path: /etc/monit/regexfile
+#       test_mount_flags: False
+#       test_usage:
+#         inodes: False (Default)
+#         free: False (Default)
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: % (Default)
+#         percent: False (Default)
+#       test_service_time:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_permissions:
+#         changed: True (Default)
+#         mode: ''
+#       test_uid: monit
+#       test_gid: monit
+#       test_pid: False (Default)
+#       test_ppid: False (Default)
+#       test_uptime:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         unit: hours (Default)
+#       test_status:
+#         changed: True (Default)
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 0
+#       test_link:
+#         status: True (Default)
+#         capacity: False
+#       test_saturation:
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#       test_bandwidth:
+#         upload: True (Default)
+#         download: False
+#         greater: True (Default)
+#         less: False
+#         equal: False
+#         notequal: False
+#         value: 10
+#         packets: False (Default)
+#         unit: GB (Default)
+#         interval:
+#           value: 12
+#           unit: hours
+#       test_ping:
+#         ipv4: False
+#         ipv6: False
+#         count: 3
+#         size: 64
+#         timeout: 5
+#         address: 192.168.10.1
+#       test_connection:
+#         host: 191.168.10.10
+#         port: 22
+#         ipv4: False
+#         ipv6: False
+#         address: 192.168.10.1
+#         socket: /var/run/socket.sock
+#         tcp: False
+#         udp: False
+#         ssl: False
+#         ssl_options:
+#           version: tlsv12 (Default)
+#           verify: True (Default)
+#           selfsigned: False (Default)
+#           ciphers: ''
+#           client_pem: /etc/monit/ssl/clients.pem
+#           ca_pem: /etc/monit/ssl/ca.pem
+#           ca_dir: /usr/share/ca-certificates
+#         certificate_checksum:
+#           sha1: True (Default)
+#           md5: False
+#           expected: cf32be630596d2ceff8582566d94b6eb5263191a
+#         certificate_valid: 30
+#         protocol: ssh
+#         send_expect:
+#           - value: '\0xFF\0xFF\0xFF\0xFFgetstatus'
+#             send: False
+#             expect: False
+#         timeout: 5
+#         retry: 2
+#         username: monit
+#         password: s3Cr3T
+#         uri: /custom-uri
+#         get: False
+#         head: False
+#         response_code: 404
+#         checksum:
+#           sha1: True (Default)
+#           md5: False
+#           expected: cf32be630596d2ceff8582566d94b6eb5263191a
+#         headers: {}
+#         content: '<a href="foo">bar</a>'
+#         properties:
+#           name: loglimit
+#           greater: True (Default)
+#           less: False
+#           equal: False
+#           value: 10
+#         target: valid@uri
+#         max_forward: 6
+#         origin: http://websocket.com
+#         version: 13
+#         identity: ~/.ssh/id_rsa
+#         command: pwd
+#       tolerance:
+#         cycles: 5
+#         times: 3
+#       action_alert: True (Default)
+#       action_restart: False
+#       action_start: False
+#       action_stop: False
+#       action_exec:
+#         command: "/usr/local/bin/sms.sh"
+#         uid: monit
+#         gid: monit
+#         repeat: 5
+#       action_unmonitor: False
+#       succeeded_action_alert: False
+#       succeeded_action_restart: False
+#       succeeded_action_start: False
+#       succeeded_action_stop: False
+#       succeeded_action_exec:
+#         command: "/usr/local/bin/sms.sh"
+#         uid: monit
+#         gid: monit
+#         repeat: 5
+#       succeeded_action_unmonitor: False
+#   ignore_content:
+#     - match: True (Default)
+#       regex: .*
+#       path: /etc/monit/regexfile
+#   alerts:
+#     - email: email@domain.com
+#       events: []
+#       reminder: 5
+#       mail_format:
+#         from: monit@foo.bar
+#         reply-to: support@domain.com
+#         subject: $SERVICE $EVENT at $DATE
+#         message: |
+#           Monit $ACTION $SERVICE at $DATE on $HOST: $DESCRIPTION.
+#           Yours sincerely,
+#           monit
+#   noalert:
+#     - email@domain.com
