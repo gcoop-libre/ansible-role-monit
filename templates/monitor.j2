@@ -259,7 +259,7 @@
 {% set monit_monitor_test = monit_monitor_test + ' != ' %}
 {% endif %}
 {% if test.test_content.regex is defined %}
-{% set monit_monitor_test = monit_monitor_test + test.test_content.regex %}
+{% set monit_monitor_test = monit_monitor_test + '"' + test.test_content.regex + '"' %}
 {% else %}
 {% set monit_monitor_test = monit_monitor_test + test.test_content.path %}
 {% endif %}
@@ -906,7 +906,7 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% if monit_monitor.ignore_content is defined %}
 {% for ignore_content in monit_monitor.ignore_content %}
 {% if ignore_content.regex is defined or ignore_content.path is defined %}
-  IGNORE CONTENT {{ (ignore_content.match | default(True)) | ternary('=', '!=') }} {{ (ignore_content.regex is defined) | ternary(ignore_content.regex, ignore_content.path) }}
+  IGNORE CONTENT {{ (ignore_content.match | default(True)) | ternary('=', '!=') }} {{ (ignore_content.regex is defined) | ternary('"' + ignore_content.regex + '"', ignore_content.path) }}
 {% endif %}
 {% endfor %}
 {% endif %}
