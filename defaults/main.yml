@@ -182,7 +182,8 @@ monit_monitors: []
 #   every_cycles: 5
 #   every_cron: "* 8-19 * * 1-5"
 #   not_every_cron: "* 0-3 * * 0"
-#   group: www
+#   groups:
+#     - www
 #   mode_active: True (Default)
 #   onreboot_start: True (Default)
 #   onreboot_nostart: False

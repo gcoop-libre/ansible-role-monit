@@ -362,9 +362,10 @@ Command to execute on `restart` action. If it should run with a user or group di
 
 The service poll time is handled with this 3 properties. If one of them is defined, the service is checked every X cycles or using a cron definition.
 
-    group: www
+    groups:
+      - www
 
-With this property it is possible to group similar service entries together and manage them as a whole.
+With this property it is possible to group similar service entries together and manage them as a whole. Every service may have more than one group assigned.
 
     mode_active: True
 

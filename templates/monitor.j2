@@ -814,9 +814,11 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% endif %}
 {% endif %}
 {% endif %}
-{% if monit_monitor.group is defined %}
+{% if monit_monitor.groups is defined %}
 
-  GROUP {{ monit_monitor.group }}
+{% for group in monit_monitor.groups %}
+  GROUP {{ group }}
+{% endfor %}
 {% endif %}
 {% if monit_monitor_type not in ['SYSTEM', 'PROGRAM'] %}
   MODE {{ (monit_monitor.mode_active | default(True)) | ternary('ACTIVE', 'PASSIVE') }}
@@ -1036,9 +1038,11 @@ CHECK {{ custom_monitor.type }} {{ custom_monitor.name }}
 {% endif %}
 {% endif %}
 {% endif %}
-{% if monit_monitor.group is defined %}
+{% if monit_monitor.groups is defined %}
 
-  GROUP {{ monit_monitor.group }}
+{% for group in monit_monitor.groups %}
+  GROUP {{ group }}
+{% endfor %}
 {% endif %}
 {% if custom_monitor.type not in ['SYSTEM', 'PROGRAM'] %}
   MODE {{ (monit_monitor.mode_active | default(True)) | ternary('ACTIVE', 'PASSIVE') }}
