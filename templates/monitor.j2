@@ -495,7 +495,7 @@
 {% endif %}
 {% else %}
 {% if (test.test_connection.ssl_options.version is defined) and ((test.test_connection.ssl_options.version | lower) != 'auto') %}
-{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL ' + monit_mail_ssl_options.version %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL ' + test.test_connection.ssl_options.version %}
 {% else %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL SSLAUTO' %}
 {% endif %}
@@ -712,7 +712,7 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% if monit_monitor.gid is defined %}
   AND WITH GID "{{ monit_monitor.gid }}"
 {% endif %}
-{% if monit_monitor.timeout %}
+{% if monit_monitor.timeout is defined %}
   TIMEOUT {{ monit_monitor.timeout }} SECONDS
 {% endif %}
 {% elif monit_monitor_type == 'NETWORK' %}
