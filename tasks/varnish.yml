@@ -1,7 +1,7 @@
 ---
 - include: varnish-backend-script.yml
   vars:
-    monit_varnish_backend: "{{ monit_monitor.1.test_connection.host is defined | ternary(monit_monitor.1.test_connection.host, monit_monitor.0.host)) }}"
+    monit_varnish_backend: "{{ (monit_monitor.1.test_connection.host is defined | ternary(monit_monitor.1.test_connection.host, monit_monitor.0.host)) }}"
     monit_varnish_version: "{{ monit_monitor.1.test_connection.version }}"
   with_subelements:
     - "{{ monit_monitors }}"
