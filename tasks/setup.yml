@@ -6,6 +6,14 @@
     cache_valid_time: 3600
     state: present
 
+- name: Ensure OpenSSL is installed when needed.
+  apt:
+    name: openssl
+    update_cache: yes
+    cache_valid_time: 3600
+    state: present
+  when: (monit_ssl | length > 0) or (monit_httpd_ssl) or (monit_mail_ssl)
+
 - name: Ensure config directories exists.
   file:
     path: "{{ item }}"
