@@ -514,7 +514,7 @@
 {% endif %}
 {% endif %}
 {% if test.test_connection.certificate_checksum is defined and test.test_connection.certificate_checksum.expected is defined %}
-{% set monit_monitor_test = monit_monitor_test + 'WITH CERTIFICATE CHECKSUM' %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CERTIFICATE CHECKSUM' %}
 {% if test.test_connection.certificate_checksum.md5 | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
 {% else %}
@@ -570,7 +570,7 @@
 {% set monit_monitor_test = monit_monitor_test + ' AND HAS STATUS = ' + (test.test_connection.response_code | string) %}
 {% endif %}
 {% if test.test_connection.checksum is defined and test.test_connection.checksum.expected is defined %}
-{% set monit_monitor_test = monit_monitor_test + 'WITH CHECKSUM' %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CHECKSUM' %}
 {% if test.test_connection.checksum.md5 | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
 {% else %}
