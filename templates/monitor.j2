@@ -256,11 +256,19 @@
 {% endif %}
 {% elif test.test_content is defined %}
 {% if monit_monitor_type == 'FILE' and (test.test_content.regex is defined or test.test_content.path is defined) %}
+{% if monit_test_file_content_available %}
 {% set monit_monitor_test = 'CONTENT' %}
 {% if test.test_content.match | default(True) %}
 {% set monit_monitor_test = monit_monitor_test + ' = ' %}
 {% else %}
 {% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% endif %}
+{% else %}
+{% if test.test_content.match | default(True) %}
+{% set monit_monitor_test = 'MATCH' %}
+{% else %}
+{% set monit_monitor_test = 'NOT MATCH' %}
+{% endif %}
 {% endif %}
 {% if test.test_content.regex is defined %}
 {% set monit_monitor_test = monit_monitor_test + '"' + test.test_content.regex + '"' %}
@@ -912,7 +920,11 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% if monit_monitor.ignore_content is defined %}
 {% for ignore_content in monit_monitor.ignore_content %}
 {% if ignore_content.regex is defined or ignore_content.path is defined %}
+{% if monit_test_file_content_available %}
   IGNORE CONTENT {{ (ignore_content.match | default(True)) | ternary('=', '!=') }} {{ (ignore_content.regex is defined) | ternary('"' + ignore_content.regex + '"', ignore_content.path) }}
+{% else %}
+  IGNORE {{ (ignore_content.match | default(True)) | ternary('MATCH', 'NOT MATCH') }} {{ (ignore_content.regex is defined) | ternary('"' + ignore_content.regex + '"', ignore_content.path) }}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
