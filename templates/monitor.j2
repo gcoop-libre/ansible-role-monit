@@ -265,9 +265,9 @@
 {% endif %}
 {% else %}
 {% if test.test_content.match | default(True) %}
-{% set monit_monitor_test = 'MATCH' %}
+{% set monit_monitor_test = 'MATCH ' %}
 {% else %}
-{% set monit_monitor_test = 'NOT MATCH' %}
+{% set monit_monitor_test = 'NOT MATCH ' %}
 {% endif %}
 {% endif %}
 {% if test.test_content.regex is defined %}
