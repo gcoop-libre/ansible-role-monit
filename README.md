@@ -695,8 +695,8 @@ This test allows to trigger an action based on the PING response of the `host`. 
       username: monit
       password: s3Cr3T
       uri: /custom-uri
-      get: False
-      head: False
+      method_get: False
+      method_head: False
       response_code: 404
       checksum:
         sha1: True
@@ -738,8 +738,8 @@ This test allows to trigger an action based on a failed connection via a network
 * `username`: Username that should be used for authentication. It can be used in the following protocols: `apache-status`, `http`, `mysql`, `smtp`, `smtps`, `ssh_command`.
 * `password`: Password that should be used for authentication. It can be used in the following protocols: `apache-status`, `http`, `mysql`, `radius`, `smtp`, `smtps`.
 * `uri`: URL address that should be used when testing the connection. It can be used in the following protocols: `apache-status`, `http`, `websocket`.
-* `get`: Use GET HTTP method when testing the connection. It can be used in the following protocols: `http`.
-* `head`: Use HEAD HTTP method when testing the connection. It can be used in the following protocols: `http`.
+* `method_get`: Use GET HTTP method when testing the connection. It can be used in the following protocols: `http`.
+* `method_head`: Use HEAD HTTP method when testing the connection. It can be used in the following protocols: `http`.
 * `response_code`: Expected response code for the connection. It can be used in the following protocols: `http`.
 * `checksum`: Compare the `md5` or `sha1` checksum of the returned documenta against  the `expected` value. It can be used in the following protocols: `http`.
 * `headers`: Dictionary containing the HTTP headers that should be used on the connection. It can be used in the following protocols: `http`.

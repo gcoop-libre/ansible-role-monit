@@ -379,8 +379,8 @@ monit_monitors: []
 #         username: monit
 #         password: s3Cr3T
 #         uri: /custom-uri
-#         get: False
-#         head: False
+#         method_get: False
+#         method_head: False
 #         response_code: 404
 #         checksum:
 #           sha1: True (Default)

@@ -542,9 +542,9 @@
 {% if test.test_connection.password is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
 {% endif %}
-{% if test.test_connection.get | default(False) %}
+{% if test.test_connection.method_get | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' USING METHOD GET' %}
-{% elif test.test_connection.head | default(False) %}
+{% elif test.test_connection.method_head | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' USING METHOD HEAD' %}
 {% endif %}
 {% if test.test_connection.headers is defined %}
