@@ -569,14 +569,8 @@
 {% if test.test_connection.response_code is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' AND HAS STATUS = ' + (test.test_connection.response_code | string) %}
 {% endif %}
-{% if test.test_connection.checksum is defined and test.test_connection.checksum.expected is defined %}
-{% set monit_monitor_test = monit_monitor_test + ' WITH CHECKSUM' %}
-{% if test.test_connection.checksum.md5 | default(False) %}
-{% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
-{% else %}
-{% set monit_monitor_test = monit_monitor_test + ' SHA1 ' %}
-{% endif %}
-{% set monit_monitor_test = monit_monitor_test + '"' + test.test_connection.checksum.expected + '"' %}
+{% if test.test_connection.checksum is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CHECKSUM "' + test.test_connection.checksum + '"' %}
 {% endif %}
 {% elif (test.test_connection.protocol | lower) == 'apache-status' %}
 {% if test.test_connection.uri is defined %}

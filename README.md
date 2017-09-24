@@ -741,7 +741,7 @@ This test allows to trigger an action based on a failed connection via a network
 * `method_get`: Use GET HTTP method when testing the connection. It can be used in the following protocols: `http`.
 * `method_head`: Use HEAD HTTP method when testing the connection. It can be used in the following protocols: `http`.
 * `response_code`: Expected response code for the connection. It can be used in the following protocols: `http`.
-* `checksum`: Compare the `md5` or `sha1` checksum of the returned documenta against  the `expected` value. It can be used in the following protocols: `http`.
+* `checksum`: Compare the md5 or sha1 checksum of the returned documenta against the `checksum` value. It can be used in the following protocols: `http`.
 * `headers`: Dictionary containing the HTTP headers that should be used on the connection. It can be used in the following protocols: `http`.
 * `content`: Pattern which is expected in the data returned by the server. It can be used in the following protocols: `http`.
 * `properties: List of child statuses to check when executing the connection test. It can be used in the following: `apache-status`. The available properties are: `cleanuplimit`, `closelimit`, `dnslimit`, `gracefullimit`, `keepalivelimit`, `loglimit`, `replylimit`, `requestlimit`, `startlimit`, `waitlimit`.

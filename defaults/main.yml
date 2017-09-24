@@ -382,10 +382,7 @@ monit_monitors: []
 #         method_get: False
 #         method_head: False
 #         response_code: 404
-#         checksum:
-#           sha1: True (Default)
-#           md5: False
-#           expected: cf32be630596d2ceff8582566d94b6eb5263191a
+#         checksum: cf32be630596d2ceff8582566d94b6eb5263191a
 #         headers: {}
 #         content: '<a href="foo">bar</a>'
 #         properties:
