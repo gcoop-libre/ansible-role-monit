@@ -66,7 +66,11 @@
 {% endif %}
 {% elif monit_monitor_type == 'PROCESS' %}
 {% if test.test_cpu.total | default(False) %}
+{% if monit_test_total_cpu_available %}
 {% set monit_monitor_test = 'TOTAL CPU' %}
+{% else %}
+{% set monit_monitor_test = 'TOTALCPU' %}
+{% endif %}
 {% else %}
 {% set monit_monitor_test = 'CPU' %}
 {% endif %}
@@ -252,11 +256,19 @@
 {% endif %}
 {% elif test.test_content is defined %}
 {% if monit_monitor_type == 'FILE' and (test.test_content.regex is defined or test.test_content.path is defined) %}
+{% if monit_test_file_content_available %}
 {% set monit_monitor_test = 'CONTENT' %}
 {% if test.test_content.match | default(True) %}
 {% set monit_monitor_test = monit_monitor_test + ' = ' %}
 {% else %}
 {% set monit_monitor_test = monit_monitor_test + ' != ' %}
+{% endif %}
+{% else %}
+{% if test.test_content.match | default(True) %}
+{% set monit_monitor_test = 'MATCH' %}
+{% else %}
+{% set monit_monitor_test = 'NOT MATCH' %}
+{% endif %}
 {% endif %}
 {% if test.test_content.regex is defined %}
 {% set monit_monitor_test = monit_monitor_test + '"' + test.test_content.regex + '"' %}
@@ -495,14 +507,14 @@
 {% endif %}
 {% else %}
 {% if (test.test_connection.ssl_options.version is defined) and ((test.test_connection.ssl_options.version | lower) != 'auto') %}
-{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL ' + monit_mail_ssl_options.version %}
+{% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL ' + test.test_connection.ssl_options.version %}
 {% else %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE TCPSSL SSLAUTO' %}
 {% endif %}
 {% endif %}
 {% endif %}
 {% if test.test_connection.certificate_checksum is defined and test.test_connection.certificate_checksum.expected is defined %}
-{% set monit_monitor_test = monit_monitor_test + 'WITH CERTIFICATE CHECKSUM' %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CERTIFICATE CHECKSUM' %}
 {% if test.test_connection.certificate_checksum.md5 | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
 {% else %}
@@ -514,10 +526,12 @@
 {% set monit_monitor_test = monit_monitor_test + ' WITH CERTIFICATE VALID FOR ' + (test.test_connection.certificate_valid | string) + ' DAYS' %}
 {% endif %}
 {% endif %}
+{% if monit_test_ssl_options_available or not test.test_connection.ssl | default(False) %}
 {% if test.test_connection.tcp | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE TCP' %}
 {% elif test.test_connection.udp | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE UDP' %}
+{% endif %}
 {% endif %}
 {% if test.test_connection.protocol is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' USING PROTOCOL ' + test.test_connection.protocol %}
@@ -528,9 +542,9 @@
 {% if test.test_connection.password is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' AND PASSWORD "' + test.test_connection.password + '"' %}
 {% endif %}
-{% if test.test_connection.get | default(False) %}
+{% if test.test_connection.method_get | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' USING METHOD GET' %}
-{% elif test.test_connection.head | default(False) %}
+{% elif test.test_connection.method_head | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' USING METHOD HEAD' %}
 {% endif %}
 {% if test.test_connection.headers is defined %}
@@ -555,14 +569,8 @@
 {% if test.test_connection.response_code is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' AND HAS STATUS = ' + (test.test_connection.response_code | string) %}
 {% endif %}
-{% if test.test_connection.checksum is defined and test.test_connection.checksum.expected is defined %}
-{% set monit_monitor_test = monit_monitor_test + 'WITH CHECKSUM' %}
-{% if test.test_connection.checksum.md5 | default(False) %}
-{% set monit_monitor_test = monit_monitor_test + ' MD5 ' %}
-{% else %}
-{% set monit_monitor_test = monit_monitor_test + ' SHA1 ' %}
-{% endif %}
-{% set monit_monitor_test = monit_monitor_test + '"' + test.test_connection.checksum.expected + '"' %}
+{% if test.test_connection.checksum is defined %}
+{% set monit_monitor_test = monit_monitor_test + ' WITH CHECKSUM "' + test.test_connection.checksum + '"' %}
 {% endif %}
 {% elif (test.test_connection.protocol | lower) == 'apache-status' %}
 {% if test.test_connection.uri is defined %}
@@ -712,7 +720,7 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% if monit_monitor.gid is defined %}
   AND WITH GID "{{ monit_monitor.gid }}"
 {% endif %}
-{% if monit_monitor.timeout %}
+{% if monit_monitor.timeout is defined %}
   TIMEOUT {{ monit_monitor.timeout }} SECONDS
 {% endif %}
 {% elif monit_monitor_type == 'NETWORK' %}
@@ -908,7 +916,11 @@ CHECK {{ monit_monitor_type }} {{ monit_monitor.name }}
 {% if monit_monitor.ignore_content is defined %}
 {% for ignore_content in monit_monitor.ignore_content %}
 {% if ignore_content.regex is defined or ignore_content.path is defined %}
+{% if monit_test_file_content_available %}
   IGNORE CONTENT {{ (ignore_content.match | default(True)) | ternary('=', '!=') }} {{ (ignore_content.regex is defined) | ternary('"' + ignore_content.regex + '"', ignore_content.path) }}
+{% else %}
+  IGNORE {{ (ignore_content.match | default(True)) | ternary('MATCH', 'NOT MATCH') }} {{ (ignore_content.regex is defined) | ternary('"' + ignore_content.regex + '"', ignore_content.path) }}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}

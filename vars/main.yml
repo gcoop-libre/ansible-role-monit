@@ -50,4 +50,8 @@ monit_test_onreboot_available: "{{ (ansible_distribution == 'Debian' and ansible
 
 monit_test_total_memory_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('8', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('14.10', '>=')) }}"
 
+monit_test_total_cpu_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('8', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('14.10', '>=')) }}"
+
+monit_test_file_content_available: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.04', '>=')) }}"
+
 monit_mysql_auth_script: "{{ (ansible_distribution == 'Debian' and ansible_distribution_version | version_compare('9', '<')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_version | version_compare('16.10', '<')) }}"
