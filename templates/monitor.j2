@@ -526,10 +526,12 @@
 {% set monit_monitor_test = monit_monitor_test + ' WITH CERTIFICATE VALID FOR ' + (test.test_connection.certificate_valid | string) + ' DAYS' %}
 {% endif %}
 {% endif %}
+{% if monit_test_ssl_options_available or not test.test_connection.ssl | default(False) %}
 {% if test.test_connection.tcp | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE TCP' %}
 {% elif test.test_connection.udp | default(False) %}
 {% set monit_monitor_test = monit_monitor_test + ' TYPE UDP' %}
+{% endif %}
 {% endif %}
 {% if test.test_connection.protocol is defined %}
 {% set monit_monitor_test = monit_monitor_test + ' USING PROTOCOL ' + test.test_connection.protocol %}
