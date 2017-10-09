@@ -8,5 +8,6 @@
     - tests
   loop_control:
     loop_var: monit_monitor
+    label: "{{ monit_monitor.0.name }}"
   static: False
   when: (monit_monitor.0.monitor_host | default(False)) and (monit_monitor.1.test_connection is defined) and ((monit_monitor.1.test_connection.protocol | default('')) == 'varnish_backend') and (monit_monitor.1.test_connection.version is defined)

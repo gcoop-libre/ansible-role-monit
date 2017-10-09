@@ -18,6 +18,7 @@
   with_items: "{{ monit_monitors }}"
   loop_control:
     loop_var: monit_monitor
+    label: "{{ monit_monitor.name }}"
   notify: restart monit
 
 - name: Initialize enabled monitors list.
@@ -30,6 +31,7 @@
   with_items: "{{ monit_monitors }}"
   loop_control:
     loop_var: monit_monitor
+    label: "{{ monit_monitor.name }}"
   when: monit_monitor.enabled | default(True)
   
 - name: Enable monitors.

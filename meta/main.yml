@@ -6,7 +6,7 @@ galaxy_info:
   description: Configure a host for using Monit.
   company: gcoop Cooperativa de Software Libre
   license: GPLv2
-  min_ansible_version: 2.1
+  min_ansible_version: 2.2
   platforms:
     - name: Ubuntu
       versions:
