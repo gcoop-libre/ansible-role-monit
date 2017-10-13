@@ -1,6 +1,6 @@
 ---
-- include: setup.yml
+- import_tasks: setup.yml
 
-- include: config.yml
+- import_tasks: config.yml
 
-- include: monitors.yml
+- import_tasks: monitors.yml
