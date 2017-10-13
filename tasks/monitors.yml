@@ -1,11 +1,11 @@
 ---
-- include: mysql.yml
+- include_tasks: mysql.yml
   when: monit_monitors | length > 0
 
-- include: ssh.yml
+- include_tasks: ssh.yml
   when: monit_monitors | length > 0
 
-- include: varnish.yml
+- include_tasks: varnish.yml
   when: monit_monitors | length > 0
 
 - name: Write monitors.
